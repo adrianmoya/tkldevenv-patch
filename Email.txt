@@ -1,0 +1,19 @@
+Hi guys! 
+
+I've been working on the TKLDevEnv project and I'm very exited about the results, pyhton/django is very nice althou I think the python documentation seems like a messy kid's notes. 
+
+I know you've been busy lately with the Lucid release, but I really wanted to show you my progress. So I thought the best way was to make a short screencast of what I've done so far. That way also I can practice a bit, as I've never done one before. I've uploaded it to youtube, and I will like you guys take a look at it. That way you can give some feedback without having to install/patch etc.
+
+In this first video I'm going to show the new command line utilities. The next one will feature the (incomplete) web interface. Please excuse the noise in the beginning of the video, I didn't want to pospone publishing the video.
+
+http://www.youtube.com/watch?v=TW-QDUdfMdA
+
+It's only 12 minutes long, and your comments will be very valuable to me. 
+
+You can comment in the forum post here (or if you prefer personally, just write me an email)
+http://www.turnkeylinux.org/forum/general/20101002/tklpatch-tklpatch-development-environment
+
+**** Contest ****
+How's the contest result going on? I image you're testing the patches, and I know it's going to take long, but do you have an estimate date for publishing the results? 
+
+

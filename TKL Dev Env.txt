@@ -1,0 +1,27 @@
+apt-get install apt-cacher
+
+Create on the rest of the Debian/Ubuntu machines on the network the file /etc/apt/apt.conf.d/02proxy with the following content:
+Acquire::http { Proxy "http://your-apt-cacher-ng-server:3142"; };
+
+echo "Acquire::http { Proxy \"http://10.120.14.100:12322\"; };" > /etc/apt/apt.conf.d/02proxy
+
+files=$(for x in `ls -1 /srv/tklpatch/base-images/*.iso`; do echo ${x/\/srv\/tklpatch\/base-images\//}; done)
+
+wget http://www.djangoproject.com/download/1.2.3/tarball/
+
+cat imagelist | sed -n 's/.*href="\(http:\/\/sourceforge.net\/projects\/turnkeylinux\/files\/.*\.iso\/download\).*/\1/p' > baseimagelist
+
+
+cat imagelist | sed -n 's|.*href="\(http://sourceforge.net/projects/turnkeylinux/files/.*\.iso/download\).*|\1|p' | sort | uniq > /usr/local/share/tklpatch/baseimagelist
+
+wget --spider http://cuddlewagon.org/somefile.txt 2>&1 | grep Length | awk '{print $2}'
+Gives me:
+543
+
+/bin/bash -e /usr/local/bin/tklpatch turnkey-bootstrap-11.0rc-lucid-x86.iso otroproyecto
+
+
+tail -2 /var/log/tklpatch/wget.log | sed -n 's/\(.*K\).*\( .*%\).*\( .*m.*s\)/Downloaded \1 (\2) Estimated time remaining: \3/p'
+
+wget -b -c -O /tmp/turnkey-wordpress-11.0rc-lucid-x86.iso -o /var/log/tklpatch/wget.log http://sourceforge.net/projects/turnkeylinux/files/turnkey-wordpress/11.0rc-lucid-x86/turnkey-wordpress-11.0rc-lucid-x86.iso/download
+

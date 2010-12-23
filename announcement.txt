@@ -1,0 +1,177 @@
+TKLPatch for TKLPatch Development Environment
+
+Hi everyone. The following patch is an idea I had while developing patches for the dev contest. It aims to build a TKLPatch development environment, making easy the life of developers to produce new patches for the project. This patch is in early stage, as there are a lot of ideas for this one, but community feedback will be important to get things done right. 
+
+[Update 08/10/2010]
+Added tklpatch-create and tklpatch-build commands
+Fixed a but in tklpatch bash autocompletion
+Added two new shares: patches and projects
+tklpatch now generates a log in /var/log/tklpatch/tklpatch-patchname.log
+[/Update]
+
+Right now, these are the first features of this appliance:
+
+Features
+Official tklpatch package pre-installed 
+Modified versions of tklpatch and tklpatch-chroot scripts (changes explained below)
+New commands: tklpatch-getimage, tklpatch-publish, tklpatch-create, tklpatch-build (explained bellow)
+Samba shares for projects, patches, finished patched-isos and base-images (convenience)
+Squid proxy optimized for package and archives downloading. (speed)
+Bash autocompletion for tklpatch, tklpatch-getimage and tklpatch-build commands. 
+Log from last tklpatch run. 
+
+Explanation:
+Dont know how to set a patching environment to test the last patch published in the forums (that you need)? Simply deploy this appliance (ok, right know you have to apply it as a patch but in the future this could become official) and you'll have a complete patching environment ready to deploy and patch. 
+
+But how do I get the base image to the patching environment? what's a scp? don't worry, if you already downloaded the base image, simply access the shared folder at //IP/baseimages and copy your base image there. If you haven't donwnloaded yet, you can use the tklpatch-getimage command to get the one you need. 
+
+  tklpatch-getimage --help # to get usage instructions
+  tklpatch-getimage --list # to get a list of available images
+  tklpatch-getimage turnkey-core-beta-lucid-x86 # get the turnkey-core lucid beta image. 
+
+You can use TAB to autocomplete the name of the image you need to download. 
+At this time of development, the imagelist is in the file /usr/local/share/tklpatch/baseimagelist (made of donwload urls). In the future this can be fetched from the TKL site itself. I've only included 4 images as this is a proof of concept. 
+
+Messy development environment? lots of images in the current folder? Which one is that -patched image? No more messy environments! your base images (downloaded with tklpatch-getimage or copied) are located in /srv/tklpatch/base-images. Bash autocompletion makes it easy to get the image you need to patch simply using the TAB after tklpatch command. tklpatch itself have been modified to look for images in the current directory, but if no one is found, it automatically search for them on /srv/tklpatch/base-images. Also, now tklpatch adds the patch name to the final image, so if your running the asterisk patch, you'll final image will have -asterisk in it's name. 
+
+Tired of waiting for package downloading each time you run your patch to test it? You are developing 3 patches that use apache and mysql and all of them take time downloading the same stuff? Wait no more! This dev env has an integrated squid optimized for package downloading. You don't have to invent your own ways to save time, as tklpatch-chroot have been modified to add the internal proxy to apt-get and wget, so all operations regarding package installations from ANY source are cached, as all files you get from wget. After patching, no trace of the proxy use will be left in your final iso. 
+
+I've finished patching, now how do I get the final image to my computer? Easy: run the tklpatch-publish command to move the iso image to the predefined shared directory. Then access the patchedisos share to get it. 
+
+You can access the shares from windows as any shared folder in the windows world. In linux, if you use ubuntu, the fastest way to access is symply type in nautilus:
+smb://IP/baseimages/
+smb://IP/patchedisos/
+
+[Update 08/10/2010]
+Want to star a new patch? simple. Use the tklpatch-create command to create a basic patch structure under /srv/tklpatch/projects. Simply type
+
+ tklpatch-create mynewproject
+ 
+The directory structure is going to be like this:
++ /srv/tklpatch/projects/mynewproject (directory)
++ /srv/tklpatch/projects/mynewproject/conf  (Conf file based on a customizable template located at /usr/local/share/tklpatch/conftemplate)
++ /srv/tklpatch/projects/mynewproject/debs (directory)
++ /srv/tklpatch/projects/mynewproject/overlay (directory)
++ /srv/tklpatch/projects/mynewproject/overlay/etc/confconsole/usage.txt (usage.txt file based on a customizable template located at /usr/local/share/tklpatch/usagetemplate.txt)
++ /srv/tklpatch/projects/mynewproject/overlay/etc/
+
+Then, you can access that shared folder (\\IP\projects) to edit your conf script with your favorite editor, and add files easily to the debs and overlay directories. Once you have finish patching, you'll want to build your patch to end with a tar.gz to publish. Issue the command 
+
+  tklpatch-build mynewproject 
+  
+And get your bundled patch automatically created at /srv/tklpatch/patches/mynewproject/datetime/mynewproject.tar.gz. You'll always keep the previous builds in case you need to go back to a previous version of the patch. For simplicity, you'll have a symlink to the last version located at /srv/tklpatch/patches/mynewproject/mynewproject.tar.gz (access this share through \\IP\patches). 
+
+tklpatch bash autocompletion have been configured to search for patches under /srv/tklpatch/patches so you can use TAB to autocomplete the patch name! Also, if you want to check how the patch process went, you can access a log under /var/log/tklpatch/tklpatch-mynewproject with the complete output from the last time you applied the patch. 
+[/Update]
+
+If there is interest in this, I'd like to give it a nice and catchy name. I hope to get ideas from the community. These are some of mine:
+
+TKL-DEV: Not very catchy.
+TKL-DEA: TurnkeyLinux Development Environment Appliance? 
+TKL-ADE: TurnkeyLinux Appliance Development Environment?
+
+What this patch does:
+
+1. Set Hostname
+HOSTNAME=tkldevenv
+echo "$HOSTNAME" > /etc/hostname
+sed -i "s|127.0.1.1 \(.*\)|127.0.1.1 $HOSTNAME|" /etc/hosts
+hostname tkldevenv
+
+2. Update package information
+apt-get update
+
+3. Install required packages. Note that I'm not installing webmin modules here because this system is for development/patching so ideally you won't be managing the squid or samba via webmin.
+
+install tklpatch squid-deb-proxy samba
+
+4. Backup original tklcommands. They are being replaced with the overlayed new ones in /usr/local/bin
+mv /usr/bin/tklpatch /usr/bin/tklpatch.bak
+chmod -x /usr/bin/tklpatch.bak
+mv /usr/bin/tklpatch-chroot /usr/bin/tklpatch-chroot.bak
+chmod -x /usr/bin/tklpatch-chroot.bak
+
+5. Set squid port to a non default port and comment acl. If you ever need to make a patch using the squid-deb-proxy package, it won't have any problem starting as I'm setting the port to 12322 in this one. Also, removed a restriction to only cach debian repositories, as we want to use this one to also cache files donwloaded by our patch. 
+
+sed -i "s/http_port 8000/http_port 127.0.0.1:12322/" /etc/squid-deb-proxy/squid-deb-proxy.conf
+sed -i "s|acl to_ubuntu_mirrors dstdomain \"/etc/squid-deb-proxy/mirror-dstdomain.acl\"|#acl to_ubuntu_mirrors dstdomain \"/etc/squid-deb-proxy/mirror-dstdomain.acl\"|" /etc/squid-deb-proxy/squid-deb-proxy.conf
+sed -i "s/http_access deny \!to_ubuntu_mirrors/#http_access deny \!to_ubuntu_mirrors/" /etc/squid-deb-proxy/squid-deb-proxy.conf
+
+6. [Updated 08/10/2010] Create directories for the samba shares. Configuration of the shares is being overlayed.
+mkdir -p /srv/tklpatch/patched-isos
+chown nobody.nogroup /srv/tklpatch/patched-isos
+mkdir -p /srv/tklpatch/base-images
+chown nobody.nogroup /srv/tklpatch/base-images
+mkdir -p /srv/tklpatch/patches
+chown nobody.nogroup /srv/tklpatch/patches
+mkdir -p /srv/tklpatch/projects
+chown nobody.nogroup /srv/tklpatch/projects
+
+7. Stop services 
+service squid stop
+service squid-deb-proxy stop
+service squid-deb-proxy-avahi stop
+
+Diff for tklpatch [Updated 08/10/2010]
+2a3
+> # Modified by Adrian Moya <adrianmoya@gmail.com> 2010
+67c68
+< if ! [ -f $isofile ]; then
+---
+> if ! [[ -f $isofile || -f /srv/tklpatch/base-images/$isofile ]]; then
+71c72
+< if ! [ -e $patch ]; then
+---
+> if ! [[ -e $patch || -e /srv/tklpatch/patches/$patch/$patch.tar.gz ]]; then
+79a81,83
+> patchname="$(basename $patch)"
+> patchname="$(echo $patchname | sed 's/.tar.gz$//')"
+> 
+83,86c87,100
+< tklpatch-extract-iso $isofile
+< tklpatch-apply $rootfs $patch
+< tklpatch-prepare-cdroot $rootfs $cdroot
+< tklpatch-geniso $cdroot
+---
+> # check if files are local or in /srv/tklpatch
+> if ! [ -f $isofile ]; then
+>     isofile=/srv/tklpatch/base-images/$isofile
+> fi
+> if ! [ -e $patch ]; then
+>     patch=/srv/tklpatch/patches/$patch/$patch.tar.gz
+> fi
+> 
+> DATETIME=`date +%d-%m-%y\ %H:%M:%S`
+> echo "tklpatch run at $DATETIME" > /var/log/tklpatch/tklpatch-$patchname.log
+> tklpatch-extract-iso $isofile | tee -a /var/log/tklpatch/tklpatch-$patchname.log
+> tklpatch-apply $rootfs $patch | tee -a /var/log/tklpatch/tklpatch-$patchname.log
+> tklpatch-prepare-cdroot $rootfs $cdroot | tee -a /var/log/tklpatch/tklpatch-$patchname.log
+> tklpatch-geniso $cdroot $name-$patchname.iso | tee -a /var/log/tklpatch/tklpatch-$patchname.log
+91a106
+> echo "Log created at /var/log/tklpatch/tklpatch-$patchname.log"
+
+Diff for tklpatch-chroot
+2a3
+> # Modified by Adrian Moya <adrianmoya@gmail.com> 2010
+195a197,208
+> 
+>     if ! [ -f $root/etc/apt/apt.conf.d/02proxy ]; then
+>       	echo "Acquire::http { Proxy \"http://localhost:12322\"; };" > $root/etc/apt/apt.conf.d/02proxy
+>       	traphook="${traphook}rm $root/etc/apt/apt.conf.d/02proxy;"
+>     fi
+>     
+>     if ! [ -f $root/etc/wgetrc.bak ]; then
+>         cp $root/etc/wgetrc $root/etc/wgetrc.bak
+>       	echo "use_proxy = on" >> $root/etc/wgetrc
+>         echo "http_proxy = http://localhost:12322/" >> $root/etc/wgetrc
+>       	traphook="${traphook}mv $root/etc/wgetrc.bak $root/etc/wgetrc;"
+>     fi   
+
+Future ideas:
+I have lots of ideas for this one, and hope to polish them with community feedback. 
+- Directory dedicated to patches themselves? /srv/tklpatch/patches? [Done 08/10/2010]
+- Create a new project, versioning of patches [Done 08/10/2010]
+- Web application to patch. (using the new commands as a base). 
+- Web application to patch development? Edit conf file via web, add overlayed files via the web app, etc.
+
+Comments welcome!
