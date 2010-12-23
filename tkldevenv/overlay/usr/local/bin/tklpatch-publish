@@ -1,0 +1,30 @@
+#!/bin/bash -e
+# By Adrian Moya <adrianmoya@gmail.com> 2010
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) isofile
+Moves isofile to the public patched-isos directory, located at /srv/tklpatch/patched-isos.
+EOF
+    exit 1
+}
+
+if [ "$#" != "1" ]; then
+    usage
+fi
+
+if [ "$1" == "--help" ]; then
+    usage
+fi
+
+if ! [ -f $1 ]; then 
+    echo "File $1 doesn't exists. Use tklpatch-publish --help for usage."
+    exit 2
+fi
+
+mv $1 /srv/tklpatch/patched-isos/
+IP=`ifconfig  | grep 'inet addr:'| grep -v '127.0.0.1' | cut -d: -f2 | awk '{ print $1}'`
+echo "$1 was moved to public patched-isos directory."
+echo ""
+echo "Mount //$IP/patchedisos as a windows share to access your files"
+

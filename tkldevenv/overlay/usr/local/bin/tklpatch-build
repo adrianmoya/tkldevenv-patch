@@ -1,0 +1,30 @@
+#!/bin/bash -e
+# Adrian Moya <adrianmoya@gmail.com> 2010
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) project
+Create a release tarball for the project in /srv/tklpatch/patches/project.
+EOF
+    exit 1
+}
+
+if [[ "$#" != "1" ]]; then
+    usage
+fi
+
+if ! [ -d /srv/tklpatch/projects/$1 ]; then
+    echo "Project $1 not found in /srv/tklpatch/projects"
+    exit 2
+fi
+
+DATETIME=`date +%d-%m-%y_%H%M%S`
+mkdir -p /srv/tklpatch/patches/$1/$DATETIME/
+tar czf /srv/tklpatch/patches/$1/$DATETIME/$1.tar.gz -C /srv/tklpatch/projects/ $1
+if [ -f /srv/tklpatch/patches/$1/$1.tar.gz ]; then
+    rm /srv/tklpatch/patches/$1/$1.tar.gz
+fi
+ln -s /srv/tklpatch/patches/$1/$DATETIME/$1.tar.gz /srv/tklpatch/patches/$1/$1.tar.gz
+chown -R nobody.nogroup /srv/tklpatch/patches/$1
+echo "Tarball created in /srv/tklpatch/patches/$1/$DATETIME/"
+echo "A symlink to this version has been created here: /srv/tklpatch/patches/$1/$1.tar.gz"

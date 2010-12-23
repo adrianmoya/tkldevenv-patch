@@ -1,0 +1,62 @@
+#!/bin/bash -e
+# By Adrian Moya <adrianmoya@gmail.com> 2010
+
+fatal() {
+    echo "fatal: $@" 1>&2
+    exit 1
+}
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) image-name
+Download image files from turnkeylinux.org to /srv/tklpatch/base-images 
+
+To see the list of available images, use the --list option 
+EOF
+    exit 1
+}
+
+imagelist(){
+  cat /usr/local/share/tklpatch/baseimagelist | sed -n 's|http://.*-x[6,8][4,6]/\(.*\)\.iso/download|\1|p'
+}
+
+if [ "$#" != "1" ]; then
+    usage
+fi
+
+if [ "$1" == "--help" ]; then
+    usage
+fi
+
+if [ "$1" == "--update" ]; then
+    echo "Updating image list, please wait"
+    wget -q -O /tmp/imagelist http://sourceforge.net/projects/turnkeylinux/files/
+    cat /tmp/imagelist | sed -n 's|.*href="\(http://sourceforge.net/projects/turnkeylinux/files/.*\.iso/download\).*|\1|p' | sort | uniq > /usr/local/share/tklpatch/baseimagelist
+    COUNT=`wc -l < /usr/local/share/tklpatch/baseimagelist`
+    echo "Done. $COUNT images found." 
+    exit 0
+fi
+
+if [ "$1" == "--list" ]; then
+    imagelist
+else
+    validimages=`imagelist`
+    for x in $validimages; do
+      if [ $x == $1 ]; then
+        url=`cat /usr/local/share/tklpatch/baseimagelist | grep $1`
+      fi
+    done
+    if [[ $url != ""  ]]; then
+        if [ -f /srv/tklpatch/base-images/$1.iso ]; then
+    	    fatal "Image /srv/tklpatch/base-images/$1.iso already exists"
+        fi
+	echo "Downloading image $1"
+        if [ -f /tmp/$1.iso.tmp ]; then
+            rm /tmp/$1.iso.tmp
+        fi
+    	wget -c -O /tmp/$1.iso.tmp $url
+        mv /tmp/$1.iso.tmp /srv/tklpatch/base-images/$1.iso 
+    else
+   	echo "$1 is not a valid image. For a list of valid images, use the --list parameter."
+    fi
+fi

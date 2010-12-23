@@ -1,0 +1,23 @@
+#!/bin/bash -e
+# Adrian Moya <adrianmoya@gmail.com> 2010
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) projectname
+Edit project located in /srv/tklpatch/projects/
+EOF
+    exit 1
+}
+
+if [[ "$#" != "1" ]]; then
+    usage
+fi
+
+if ! [ -d /srv/tklpatch/projects/$1 ]; then
+    echo "Project $1 not found in /srv/tklpatch/projects"
+    exit 2
+fi
+
+$EDITOR /srv/tklpatch/projects/$1/conf 
+
+echo "Don't forget to tklpatch-build if you made changes to your patch!"

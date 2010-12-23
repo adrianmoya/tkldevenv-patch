@@ -1,0 +1,28 @@
+#!/bin/bash -e
+# By Adrian Moya <adrianmoya@gmail.com> 2010
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) projectname
+Creates a new tklpatch project in /srv/tklpatch/projects.
+EOF
+    exit 1
+}
+
+if [ "$#" != "1" ]; then
+    usage
+fi
+
+if [ -d /srv/tklpatch/projects/$1 ]; then
+    echo "A project named $1 already exists at /srv/tklpatch/projects/$1"
+    exit 2
+fi
+
+mkdir -p /srv/tklpatch/projects/$1/overlay/etc/confconsole/
+mkdir -p /srv/tklpatch/projects/$1/debs
+cp /usr/local/share/tklpatch/conftemplate /srv/tklpatch/projects/$1/conf
+cp /usr/local/share/tklpatch/usagetemplate.txt /srv/tklpatch/projects/$1/overlay/etc/confconsole/usage.txt
+chmod +x /srv/tklpatch/projects/$1/conf
+chown -R nobody.nogroup /srv/tklpatch/projects/$1
+echo "Project created at /srv/tklpatch/projects/$1"
+

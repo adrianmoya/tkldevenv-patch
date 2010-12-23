@@ -1,0 +1,56 @@
+#!/bin/bash -ex
+# By Adrian Moya <adrianmoya@gmail.com> 2010
+
+install()
+{
+    DEBIAN_FRONTEND=noninteractive apt-get -y \
+        -o DPkg::Options::=--force-confdef \
+        -o DPkg::Options::=--force-confold \
+        install $@
+}
+
+# Set Hostname
+HOSTNAME=tkldevenv
+echo "$HOSTNAME" > /etc/hostname
+sed -i "s|127.0.1.1 \(.*\)|127.0.1.1 $HOSTNAME|" /etc/hosts
+hostname tkldevenv
+
+#Update package information
+apt-get update
+
+# Install required packages
+install tklpatch squid-deb-proxy samba apache2 libapache2-mod-wsgi libapache2-mod-xsendfile git-core
+
+# Backup original tklcommands 
+mv /usr/bin/tklpatch /usr/bin/tklpatch.bak
+chmod -x /usr/bin/tklpatch.bak
+mv /usr/bin/tklpatch-chroot /usr/bin/tklpatch-chroot.bak
+chmod -x /usr/bin/tklpatch-chroot.bak
+
+# Set squid port to a non default port and comment acl
+sed -i "s/http_port 8000/http_port 12322/" /etc/squid-deb-proxy/squid-deb-proxy.conf
+sed -i "s|acl to_ubuntu_mirrors dstdomain \"/etc/squid-deb-proxy/mirror-dstdomain.acl\"|#acl to_ubuntu_mirrors dstdomain \"/etc/squid-deb-proxy/mirror-dstdomain.acl\"|" /etc/squid-deb-proxy/squid-deb-proxy.conf
+sed -i "s/http_access deny \!to_ubuntu_mirrors/#http_access deny \!to_ubuntu_mirrors/" /etc/squid-deb-proxy/squid-deb-proxy.conf
+
+# Dir for log
+mkdir /var/log/tklpatch
+
+# Samba shares 
+mkdir -p /srv/tklpatch/patched-isos
+chown nobody.nogroup /srv/tklpatch/patched-isos
+mkdir -p /srv/tklpatch/base-images
+chown nobody.nogroup /srv/tklpatch/base-images
+mkdir -p /srv/tklpatch/patches
+chown nobody.nogroup /srv/tklpatch/patches
+mkdir -p /srv/tklpatch/projects
+chown nobody.nogroup /srv/tklpatch/projects
+
+# Get tkldevenv django app from git. 
+mkdir -p /usr/local/django && cd /usr/local/django
+
+
+# Stop services 
+service squid stop
+service squid-deb-proxy stop
+service squid-deb-proxy-avahi stop
+service apache2 stop

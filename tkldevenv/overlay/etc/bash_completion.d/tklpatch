@@ -1,0 +1,75 @@
+# Bash completion file for tklpatch commands
+# By Adrian Moya 2010
+
+_tklpatch() 
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ $COMP_CWORD -eq 1 ]; then
+        local imagelist=$(for x in `ls -1 /srv/tklpatch/base-images/*.iso 2>/dev/null`; do echo ${x/\/srv\/tklpatch\/base-images\//}; done)
+        local currentdirlist=$(for x in `ls -1 *.iso 2>/dev/null`; do echo ${x}; done)
+        COMPREPLY=( $(compgen -W "$imagelist $currentdirlist" -- ${cur}) )      	
+        return 0
+    fi
+    if [ $COMP_CWORD -eq 2 ]; then
+	      local files=$(for x in `ls -1 *.tar.gz 2>/dev/null`; do echo ${x}; done)
+      	local folders=$(ls -d */ 2>/dev/null)
+      	local patches=$(for x in `ls -d /srv/tklpatch/patches/*/ 2>/dev/null`; do echo ${x/\/srv\/tklpatch\/patches\//} | sed "s|/||g"; done)
+      	COMPREPLY=( $(compgen -W "$files $folders $patches" -- ${cur}) )
+      	return 0
+    fi
+}
+
+_tklpatch-getimage()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--list --help --update"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    if [ $COMP_CWORD -eq 2 ]; then
+        return 0
+    fi
+
+    if [ -f /usr/local/share/tklpatch/baseimagelist ]; then
+        local imagelist=$(cat /usr/local/share/tklpatch/baseimagelist | sed -r 's|http://.*-x[6,8][4,6]/||' | sed 's|.iso/download||')
+        COMPREPLY=( $(compgen -W "$imagelist" -- ${cur}) )
+    fi
+    return 0
+}
+
+_tklpatch-build()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--help"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    if [ $COMP_CWORD -eq 2 ]; then
+        return 0
+    fi
+
+    local imagelist=$(for x in `ls -d /srv/tklpatch/projects/*/`; do tmp=${x/\/srv\/tklpatch\/projects\//}; echo ${tmp/\//}; done)
+    COMPREPLY=( $(compgen -W "$imagelist" -- ${cur}) )
+    return 0
+}
+
+complete -F _tklpatch tklpatch
+complete -F _tklpatch-getimage tklpatch-getimage
+complete -F _tklpatch-build tklpatch-build
+complete -F _tklpatch-build tklpatch-edit
