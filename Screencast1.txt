@@ -1,9 +1,0 @@
-1. Logged in, show empty folders
-2. tklpatch-getimage
-3. tklpatch-create
-4. tklpatch-build
-5. tklpatch
-
-
-x. Run the dev server
-screen ./manage.py runserver 192.168.3.7:8000

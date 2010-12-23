@@ -1,5 +1,0 @@
-As I haven't had the time to do the screencast, here are some screenshots of the progress of the web interface. Please understand I haven't worked yet on a better design. The gui doesn't use javascript. In the final version, jquery will (I hope) do some magic to show you a modern gui as expected. My focus right now is that the application work. 
-
-So this is pre-alpha v0.00001 of the app ;)
-
-
