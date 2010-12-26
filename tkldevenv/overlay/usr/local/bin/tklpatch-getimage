@@ -17,7 +17,11 @@ EOF
 }
 
 imagelist(){
-  cat /usr/local/share/tklpatch/baseimagelist | sed -n 's|http://.*-x[6,8][4,6]/\(.*\)\.iso/download|\1|p'
+  if [ -f /usr/local/share/tklpatch/baseimagelist ]; then
+    cat /usr/local/share/tklpatch/baseimagelist | sed -n 's|http://.*-x[6,8][4,6]/\(.*\)\.iso/download|\1|p'
+  else
+    echo "No base image list found. Use --update to get one"
+  fi
 }
 
 if [ "$#" != "1" ]; then
@@ -28,14 +32,14 @@ if [ "$1" == "--help" ]; then
     usage
 fi
 
-if [ "$1" == "--update" ]; then
-    echo "Updating image list, please wait"
-    wget -q -O /tmp/imagelist http://sourceforge.net/projects/turnkeylinux/files/
-    cat /tmp/imagelist | sed -n 's|.*href="\(http://sourceforge.net/projects/turnkeylinux/files/.*\.iso/download\).*|\1|p' | sort | uniq > /usr/local/share/tklpatch/baseimagelist
-    COUNT=`wc -l < /usr/local/share/tklpatch/baseimagelist`
-    echo "Done. $COUNT images found." 
-    exit 0
-fi
+#if [ "$1" == "--update" ]; then
+    #echo "Updating image list, please wait"
+    #wget -q -O /tmp/imagelist http://sourceforge.net/projects/turnkeylinux/files/
+    #cat /tmp/imagelist | sed -n 's|.*href="\(http://sourceforge.net/projects/turnkeylinux/files/.*\.iso/download\).*|\1|p' | sort | uniq > /usr/local/share/tklpatch/baseimagelist
+    #COUNT=`wc -l < /usr/local/share/tklpatch/baseimagelist`
+    #echo "Done. $COUNT images found." 
+    #exit 0
+#fi
 
 if [ "$1" == "--list" ]; then
     imagelist
@@ -54,7 +58,7 @@ else
         if [ -f /tmp/$1.iso.tmp ]; then
             rm /tmp/$1.iso.tmp
         fi
-    	wget -c -O /tmp/$1.iso.tmp $url
+    	wget -O /tmp/$1.iso.tmp $url
         mv /tmp/$1.iso.tmp /srv/tklpatch/base-images/$1.iso 
     else
    	echo "$1 is not a valid image. For a list of valid images, use the --list parameter."

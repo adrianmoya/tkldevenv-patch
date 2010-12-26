@@ -46,8 +46,12 @@ mkdir -p /srv/tklpatch/projects
 chown nobody.nogroup /srv/tklpatch/projects
 
 # Get tkldevenv django app from git. 
-mkdir -p /usr/local/django && cd /usr/local/django
+cd /opt/
+git clone git://github.com/adrianmoya/tkldevenv_webapp.git
 
+# Enable tkldevenv_webapp
+a2ensite tkldevenv_webapp
+a2dissite default
 
 # Stop services 
 service squid stop
