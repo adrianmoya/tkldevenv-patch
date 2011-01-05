@@ -1,0 +1,37 @@
+#!/bin/bash -e
+# Copyright (c) 2011 Adrian Moya <adrian@turnkeylinux.org> - all rights reserved
+
+fatal() {
+    echo "fatal: $@" 1>&2
+    exit 1
+}
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) rootfs-dir 
+Compress the rootfs-dir to generate the final ovz template.
+
+Environment variables:
+
+    TKLPATCH_DEBUG       Turn on debugging. Increases verbosity.
+EOF
+    exit 1
+}
+
+if [[ "$#" != "1" ]]; then
+    usage
+fi
+
+[ -n "$TKLPATCH_DEBUG" ] && set -x
+
+rootfs=$1
+
+name="$(basename $rootfs)"
+name="$(echo $name | sed 's/.rootfs$//')"
+templatename=$name
+
+[ -d $rootfs ] || fatal "no such directory: $rootfs"
+
+echo "Compressing filesystem..."
+tar --numeric-owner -zcf $templatename-ovz.tar.gz -C $rootfs .
+echo "Done. $templatename-ovz.tar.gz generated"
