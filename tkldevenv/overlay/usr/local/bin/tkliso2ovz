@@ -49,13 +49,14 @@ fi
 [ "$(id -u)" != "0" ] && fatal "must be run as root"
 
 isofile=$1
+patch=tklovz.tar.gz
 
 if ! [[ -f $isofile || -f /srv/tklpatch/base-images/$isofile ]]; then
     fatal "no such file '$isofile;"
 fi
 
-if [ ! -f /usr/local/share/tklpatch/tklovz.tar.gz ]; then
-   fatal "Can't find the ovz patch at /usr/local/share/tklpatch" 
+if ! [[ -f $patch || -f /usr/local/share/tklpatch/$patch ]]; then
+    fatal "Can't find the tklovz patch"                                        
 fi
 
 [ -n "$TKLPATCH_DEBUG" ] && set -x
@@ -76,10 +77,15 @@ if ! [ -f $isofile ]; then
     isofile=/srv/tklpatch/base-images/$isofile
 fi
 
+# check if patch is local or in /usr/local/share/tklpatch
+if ! [ -f $patch ]; then
+    patch=/usr/local/share/tklpatch/tklovz.tar.gz
+fi
+
 DATETIME=`date +%d-%m-%y\ %H:%M:%S`
 echo "tkliso2ovz run at $DATETIME" > /var/log/tklpatch/$name-ovz.log
 tklpatch-extract-iso $isofile | tee -a /var/log/tklpatch/$name-ovz.log
-tklpatch-apply $rootfs /usr/local/share/tklpatch/tklovz.tar.gz | tee -a /var/log/tklpatch/$name-ovz.log
+tklpatch-apply $rootfs $patch | tee -a /var/log/tklpatch/$name-ovz.log
 tklpatch-gen-ovztemplate $rootfs | tee -a /var/log/tklpatch/$name-ovz.log
 
 # delete temporary rootfs and cdroot unless TKLCONV_DEBUG
