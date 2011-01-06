@@ -21,7 +21,7 @@ fi
 mkdir -p /srv/tklpatch/projects/$1/overlay/etc/confconsole/
 mkdir -p /srv/tklpatch/projects/$1/debs
 cp /usr/local/share/tklpatch/conftemplate /srv/tklpatch/projects/$1/conf
-cp /usr/local/share/tklpatch/usagetemplate.txt /srv/tklpatch/projects/$1/overlay/etc/confconsole/usage.txt
+cp /usr/local/share/tklpatch/services.txt /srv/tklpatch/projects/$1/overlay/etc/confconsole/services.txt
 chmod +x /srv/tklpatch/projects/$1/conf
 chown -R nobody.nogroup /srv/tklpatch/projects/$1
 echo "Project created at /srv/tklpatch/projects/$1"
