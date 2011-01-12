@@ -21,8 +21,8 @@ This is the top high level script, which calls:
     1) tklpatch-extract-iso         
        Disassemble the ISO to extract its contents
 
-    2) tklpatch-apply ovz.tar.gz              
-       Apply the ovz patch to the root filesystem. 
+    2) tklpatch-apply tklovz.tar.gz              
+       Apply the tklovz patch to the root filesystem. 
 
     3) tklpatch-gen-ovztemplate
        Compress the root filesystem and create the final template.

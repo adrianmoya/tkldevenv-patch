@@ -1,0 +1,119 @@
+#!/bin/bash -e
+# Copyright (c) 2009 Alon Swartz <alon@turnkeylinux.org> - all rights reserved
+# Modified by Adrian Moya <adrianmoya@gmail.com> 2010
+# Re-modified for OpenVZ support by Adrian Moya <adrian@turnkeylinux.org> 2011
+
+fatal() {
+    echo "fatal: $@" 1>&2
+    exit 1
+}
+
+usage() {
+cat<<EOF
+Syntax: $(basename $0) image.iso patch-dir|patch.tar.gz
+Patch ISO build of appliance by applying a patch. Produces an ovz template.
+
+TKLPatch is a set of shell scripts which provide a simple way to customize and
+extend any appliance in the TurnKey Linux virtual appliance library. It's
+designed in the Unix tradition as a modular collection of simple sub-scripts.
+
+This is the top high level script, which calls:
+
+    1) tklpatch-extract-iso         
+       Disassemble the ISO to extract its contents
+
+        1) cdroot: ISO filesystem - contains bootloader and compressed rootfs
+        2) rootfs: uncompressed root filesystem
+
+    2) tklpatch-apply               
+       Apply the patch to the root filesystem. 
+
+       Patch structure:
+
+         patch-dir/
+             debs/       # custom debian packages (installed with dpkg -i *.deb)
+             overlay/    # overlay applied to root filesystem
+             conf        # configuration script to execute in chroot (rootfs)
+
+    3) tklpatch-apply tklovz.tar.gz
+       Apply the tklovz patch on top of the patched root filesystem.  
+
+    4) tklpatch-gen-ovztemplate
+       Generates the final ovz template.
+
+Environment variables:
+
+    TKLPATCH_DEBUG       
+
+      Turn on debugging: this makes tklpatch more verbose and prevents
+      deletion of temporary directories.
+
+Example usage:
+
+    TKLPATCH_DEBUG=y tklpatch path/to/turnkey-core.iso mypatch/
+
+EOF
+    exit 1
+}
+
+if [[ "$#" != "2" ]]; then
+    usage
+fi
+
+[ "$(id -u)" != "0" ] && fatal "must be run as root"
+
+isofile=$1
+patch=$2
+ovzpatch=tklovz.tar.gz
+
+if ! [[ -f $isofile || -f /srv/tklpatch/base-images/$isofile ]]; then
+    fatal "no such file '$isofile;"
+fi
+
+if ! [[ -e $patch || -e /srv/tklpatch/patches/$patch/$patch.tar.gz ]]; then
+    fatal "no such file or directory '$patch'"
+fi
+
+if ! [[ -f $ovzpatch || -f /usr/local/share/tklpatch/$ovzpatch ]]; then
+    fatal "Can't find the tklovz patch"                                        
+fi
+
+[ -n "$TKLPATCH_DEBUG" ] && set -x
+
+name="$(basename $isofile)"
+name="$(echo $name | sed 's/.iso$//')"
+
+patchname="$(basename $patch)"
+patchname="$(echo $patchname | sed 's/.tar.gz$//')"
+
+rootfs=$name.rootfs
+cdroot=$name.cdroot
+
+# check if final template exists
+if [ -f $name-ovz.tar.gz ]; then
+   fatal "$name-ovz.tar.gz already exists"
+fi
+
+# check if files are local or in /srv/tklpatch
+if ! [ -f $isofile ]; then
+    isofile=/srv/tklpatch/base-images/$isofile
+fi
+if ! [ -e $patch ]; then
+    patch=/srv/tklpatch/patches/$patch/$patch.tar.gz
+fi
+if ! [ -e $ovzpatch ]; then
+    /usr/local/share/tklpatch/$ovzpatch
+fi
+
+DATETIME=`date +%d-%m-%y\ %H:%M:%S`
+echo "tklpatch run at $DATETIME" > /var/log/tklpatch/$name-$patchname-ovz.log
+tklpatch-extract-iso $isofile | tee -a /var/log/tklpatch/$name-$patchname-ovz.log
+tklpatch-apply $rootfs $patch | tee -a /var/log/tklpatch/$name-$patchname-ovz.log
+tklpatch-apply $rootfs $ovzpatch | tee -a /var/log/tklpatch/$name-$patchname-ovz.log
+tklpatch-gen-ovztemplate $rootfs | tee -a /var/log/tklpatch/$name-$patchname-ovz.log
+
+# delete temporary rootfs and cdroot unless TKLCONV_DEBUG
+[ -z "$TKLPATCH_DEBUG" ] && rm -rf $rootfs
+[ -z "$TKLPATCH_DEBUG" ] && rm -rf $cdroot
+
+echo "Log created at /var/log/tklpatch/$name-$patchname-ovz.log"
