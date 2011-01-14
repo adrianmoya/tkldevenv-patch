@@ -102,7 +102,7 @@ if ! [ -e $patch ]; then
     patch=/srv/tklpatch/patches/$patch/$patch.tar.gz
 fi
 if ! [ -e $ovzpatch ]; then
-    /usr/local/share/tklpatch/$ovzpatch
+    ovzpatch=/usr/local/share/tklpatch/$ovzpatch
 fi
 
 DATETIME=`date +%d-%m-%y\ %H:%M:%S`
