@@ -62,6 +62,11 @@ a2dissite default
 # Add turnkeylinux key to verify gpg signatures
 gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 0xA16EB94D
 
+# Use proxy for tkldevenv
+echo "Acquire::http { Proxy \"http://localhost:12322\"; };" > $root/etc/apt/apt.conf.d/02proxy
+echo "use_proxy = on" >> $root/etc/wgetrc
+echo "http_proxy = http://localhost:12322/" >> $root/etc/wgetrc
+
 # Stop services 
 service squid stop
 service squid-deb-proxy stop
