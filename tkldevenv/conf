@@ -67,7 +67,13 @@ echo "Acquire::http { Proxy \"http://localhost:12322\"; };" > $root/etc/apt/apt.
 echo "use_proxy = on" >> $root/etc/wgetrc
 echo "http_proxy = http://localhost:12322/" >> $root/etc/wgetrc
 
-# Stop services 
+# Download tklovz patch
+cd /usr/local/src/
+git clone git://github.com/adrianmoya/tklovz-patch.git
+cd tklovz-patch/
+tar cvzf /usr/local/share/tklpatch/tklovz.tar.gz tklovz/
+
+# Stop services
 service squid stop
 service squid-deb-proxy stop
 service squid-deb-proxy-avahi stop
